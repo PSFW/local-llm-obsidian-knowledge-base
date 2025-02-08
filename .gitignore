@@ -1,0 +1,4 @@
+**/devcontainer.env
+**/.env
+/.devcontainer/cache
+/cache

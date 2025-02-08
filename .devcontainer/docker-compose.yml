@@ -1,0 +1,70 @@
+version: '3.8'
+
+include:
+  - path:
+    env_file:
+      - ./.env
+
+services:
+  # obsidian:
+  #   image: 'ghcr.io/sytone/obsidian-remote:latest'
+  #   container_name: obsidian
+  #   volumes:
+  #     - ../vaults:/docs/vaults:rw
+  #     - ../config/obsidian:/config/obsidian:rw
+  #     # - type: volume
+  #     #   source: repo-volume
+  #     #   target: '/vaults'
+  #     #   volume:
+  #     #     subpath: docs/vaults
+  #     # - type: volume
+  #     #   source: repo-volume
+  #     #   target: '/config'
+  #     #   volume:
+  #     #     subpath: config/obsidian
+  #   ports:
+  #     - ${OBSIDIAN_PORT}:8080
+  # #   user: 1000:1000
+  #   restart: unless-stopped
+  #   networks:
+  #     - '${LOCAL_ONLY_NETWORK}'
+
+  vllm-model-runner:
+    image: 'vllm/vllm-openai:v0.7.1'
+    container_name: vllm-model-runner
+    environment:
+      HUGGING_FACE_HUB_TOKEN: '${HUGGING_FACE_HUB_TOKEN}'
+      MODEL: 'unsloth/DeepSeek-R1-GGUF'
+    volumes:
+      - ./cache:/root/.cache/huggingface:rw
+      # - type: volume
+      #   source: repo-volume
+      #   target: '/root/.cache/huggingface'
+      #   volume:
+      #     subpath: cache
+
+    devices: # Setting this to share the hosts gpu
+      - /dev/dri:/dev/dri
+      - /dev/dxg:/dev/dxg
+    ipc: host # Setting this to share the hosts memory
+    ports:
+      - ${VLLM_MODEL_RUNNER_PORT}:8000
+    # user: 1000:1000
+    restart: unless-stopped
+    networks:
+      - '${LOCAL_ONLY_NETWORK}'
+
+# volumes:
+#   repo-volume:
+#     driver: local
+#     driver_opts:
+#       type: bind
+#       o: bind
+#       device: "../"
+
+networks:
+  outside-network:
+    internal: false
+  local-only-network:
+    internal: true # Setting this explicitly (false by default), allows a network to be created with no outside access.
+    name: '${LOCAL_ONLY_NETWORK}'
