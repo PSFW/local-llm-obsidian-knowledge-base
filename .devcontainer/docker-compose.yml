@@ -9,6 +9,8 @@ services:
   # obsidian:
   #   image: 'ghcr.io/sytone/obsidian-remote:latest'
   #   container_name: obsidian
+      # environment:
+      #   TZ: 'Europe/London'
   #   volumes:
   #     - ../vaults:/docs/vaults:rw
   #     - ../config/obsidian:/config/obsidian:rw
@@ -29,14 +31,19 @@ services:
   #   networks:
   #     - '${LOCAL_ONLY_NETWORK}'
 
-  vllm-model-runner:
-    image: 'vllm/vllm-openai:v0.7.1'
-    container_name: vllm-model-runner
+  vllm-intel-model-runner:
+    # image: 'intelanalytics/ipex-llm-serving-cpu:2.1.0'
+    build: 
+      context: .
+      dockerfile: ./Dockerfile.vllm-openai-ipex
+    container_name: vllm-intel-model-runner
     environment:
+      TZ: 'Europe/London'
+      NO_PROXY: 'localhost,127.0.0.1'
       HUGGING_FACE_HUB_TOKEN: '${HUGGING_FACE_HUB_TOKEN}'
       MODEL: 'unsloth/DeepSeek-R1-GGUF'
     volumes:
-      - ./cache:/root/.cache/huggingface:rw
+      - ./models:/llm/models:rw
       # - type: volume
       #   source: repo-volume
       #   target: '/root/.cache/huggingface'
@@ -53,6 +60,35 @@ services:
     restart: unless-stopped
     networks:
       - '${LOCAL_ONLY_NETWORK}'
+
+  # vllm-model-runner:
+  #   # image: 'vllm/vllm-openai:v0.7.2'
+  #   build: 
+  #     context: .
+  #     dockerfile: ./Dockerfile.vllm-openai
+  #   container_name: vllm-model-runner
+  #   environment:
+  #     TZ: 'Europe/London'
+  #     HUGGING_FACE_HUB_TOKEN: '${HUGGING_FACE_HUB_TOKEN}'
+  #     MODEL: 'unsloth/DeepSeek-R1-GGUF'
+  #   volumes:
+  #     - ./cache:/root/.cache/huggingface:rw
+      # - type: volume
+      #   source: repo-volume
+      #   target: '/root/.cache/huggingface'
+      #   volume:
+      #     subpath: cache
+
+    # devices: # Setting this to share the hosts gpu
+    #   - /dev/dri:/dev/dri
+    #   - /dev/dxg:/dev/dxg
+    # ipc: host # Setting this to share the hosts memory
+    # ports:
+    #   - ${VLLM_MODEL_RUNNER_PORT}:8000
+    # # user: 1000:1000
+    # restart: unless-stopped
+    # networks:
+    #   - '${LOCAL_ONLY_NETWORK}'
 
 # volumes:
 #   repo-volume:

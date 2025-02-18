@@ -1,0 +1,32 @@
+ARG HF_TOKEN
+FROM intelanalytics/ipex-llm-serving-cpu:2.1.0 AS base
+USER root
+WORKDIR /models
+ENV HF_TOKEN=$HF_TOKEN
+
+RUN apt-get update -y && apt-get upgrade -y 
+# Install Python dependency update
+# RUN pip install pynvml==12.0.0
+RUN apt-get install python3.12-venv -y
+RUN apt-get install python3-pip -y
+# RUN python3 -m venv .env && source .env/bin/activate
+RUN python3 -m pip install -U "huggingface_hub[cli]"
+
+FROM base AS download1
+RUN huggingface-cli download unsloth/DeepSeek-R1-GGUF DeepSeek-R1-UD-IQ2_XXS/DeepSeek-R1-UD-IQ2_XXS-00001-of-00004.gguf --local-dir /models
+
+FROM base AS download2
+RUN huggingface-cli download unsloth/DeepSeek-R1-GGUF DeepSeek-R1-UD-IQ2_XXS/DeepSeek-R1-UD-IQ2_XXS-00002-of-00004.gguf --local-dir /models
+
+FROM base AS download3
+RUN huggingface-cli download unsloth/DeepSeek-R1-GGUF DeepSeek-R1-UD-IQ2_XXS/DeepSeek-R1-UD-IQ2_XXS-00003-of-00004.gguf --local-dir /models
+
+FROM base AS download4
+RUN huggingface-cli download unsloth/DeepSeek-R1-GGUF DeepSeek-R1-UD-IQ2_XXS/DeepSeek-R1-UD-IQ2_XXS-00004-of-00004.gguf --local-dir /models
+
+FROM download4 AS final-stage
+COPY --from=download1 /models /
+COPY --from=download2 /models /
+COPY --from=download3 /models /
+
+ENTRYPOINT [ "/bin/bash", "-l", "-c" ]
