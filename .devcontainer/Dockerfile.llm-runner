@@ -1,0 +1,13 @@
+ARG HF_TOKEN
+FROM ollama/ollama:0.5.13 AS base
+USER root
+WORKDIR /app
+ENV HF_TOKEN=$HF_TOKEN
+
+# RUN ollama pull deepseek-r1
+EXPOSE 11434
+
+COPY start_services.sh .
+RUN chmod +x /app/start_services.sh
+# Run .sh file
+CMD ["/app/start_services.sh"]

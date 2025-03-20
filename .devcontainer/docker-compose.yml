@@ -35,7 +35,8 @@ services:
     # image: 'intelanalytics/ipex-llm-serving-cpu:2.1.0'
     build: 
       context: .
-      dockerfile: ./Dockerfile.vllm-openai-ipex
+      dockerfile: ./Dockerfile.llm-runner
+      # dockerfile: ./Dockerfile.vllm-openai-ipex
     container_name: vllm-intel-model-runner
     environment:
       TZ: 'Europe/London'
@@ -55,6 +56,7 @@ services:
       - /dev/dxg:/dev/dxg
     ipc: host # Setting this to share the hosts memory
     ports:
+      - 11434:11434
       - ${VLLM_MODEL_RUNNER_PORT}:8000
     # user: 1000:1000
     restart: unless-stopped
